@@ -4,6 +4,9 @@
 #define true 1
 #define false 0
 
+// TODO: fix -h (maybe it's easier to create another member "print_name" in flags struct)
+//       some combintaions of flags do not work correctly (-lc)
+
 int main(int argc, char **argv) {
   int error = true;  // default for OK
   char **patterns;
