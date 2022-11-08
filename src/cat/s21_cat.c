@@ -91,14 +91,13 @@ void cat(FILE *fp, flags_t *flags) {
     }
     if (current == '\n' && (!flags->s || newlines_in_a_row < 3)) {
       if (flags->n && (previous == '\n' || first)) printf("%6d\t", count++);
-      if (!flags->n && flags->e && (previous == '\n' || first))
-        printf("%6c\t$", ' ');
-      else if (flags->e)
+      if (flags->e) {
         printf("$");
+      }
       printf("%c", current);
     }
     if (current != '\n') {
-      if ((previous == '\n' || first == true) && (flags->n || flags->b))
+      if ((previous == '\n' || first) && (flags->n || flags->b))
         printf("%6d\t", count++);
       if (current < 32 && current != 9 && current != 10 && flags->v)
         printf("^%c", current + 64);

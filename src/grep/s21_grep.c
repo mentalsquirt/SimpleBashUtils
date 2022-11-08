@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
   char **patterns;
   if ((patterns = (char **)malloc(MAX_SIZE * MAX_SIZE * sizeof(char) +
                                   MAX_SIZE * sizeof(char *))) == NULL) {
-    error = false;
+    exit(1);
   }
   char *ptr = (char *)(patterns + MAX_SIZE);
   for (int i = 0; i < MAX_SIZE; i++) patterns[i] = ptr + MAX_SIZE * i;
@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
   //  opened
 
   if (argc < 3) {
-    printf("grep: argc < 3");
+    printf("grep: argc < 3\n");
     error = false;
   }
 
@@ -32,7 +32,10 @@ int main(int argc, char **argv) {
   // -e not -e and -e int
   // "not|and|int"
 
-  char *pattern_str = (char *)malloc(MAX_SIZE * sizeof(char));
+  char *pattern_str;
+  if ((pattern_str = (char *)malloc(MAX_SIZE * sizeof(char))) == NULL) {
+    exit(1);
+  }
 
   if (error && patterns[0][0] != 7) {
     int i = 0;  // counter for final pattern string
@@ -57,8 +60,6 @@ int main(int argc, char **argv) {
     }
   }
   if (files == 1) flags.single_file = true;
-
-  // printf("ARGC: %d\nFILES: %d\nOPTIND: %d\n", argc, files, optind);
 
   if (error) {
     for (int i = 0; i < files; i++) {
@@ -162,7 +163,7 @@ void read_file_pattern(char **patterns, int element, int *error) {
     }
   } else {
     *error = false;
-    printf("grep: %s: No such file or directory", patterns[element]);
+    printf("grep: %s: No such file or directory\n", patterns[element]);
   }
   if (patterns[element][i - 1] == '|') patterns[element][i - 1] = '\0';
   fclose(fp);
@@ -174,7 +175,7 @@ void grep(flags_t *flags, char *pattern_str, char *filename, int *error) {
   if ((fp = fopen(filename, "r")) == NULL) {
     *error = false;  // file did not open error
     if (!flags->l && !flags->s)
-      printf("grep: %s: No such file or directory", filename);
+      printf("grep: %s: No such file or directory\n", filename);
     return;
   }
 
@@ -203,11 +204,11 @@ void grep(flags_t *flags, char *pattern_str, char *filename, int *error) {
 
     strncpy(temp, line,
             MAX_SIZE);  // to prevent duplicates, matched region gets replaced
-                        // with ascii 126 in temp, hence its existence
+                        // with ascii 127 in temp, hence its existence
     if (strchr(line, '\n') == NULL) strcat(line, "\n");
 
-    while ((exec = regexec(&reg, temp, 1, pmatch, 0)) ==
-           0) {  // going through PATTERNS IN A SINGLE LINE
+    // going through PATTERNS IN A SINGLE LINE
+    while ((exec = regexec(&reg, temp, 1, pmatch, 0)) == 0) {
       if (flags->v) break;
       if (flags->c) break;
       if (flags->l) break;
@@ -222,7 +223,7 @@ void grep(flags_t *flags, char *pattern_str, char *filename, int *error) {
       }
       for (int i = pmatch[0].rm_so; i < pmatch[0].rm_eo; i++) {
         if (flags->o) printf("%c", line[i]);
-        temp[i] = 126;
+        temp[i] = 127;
       }
       if (flags->o) {
         printf("\n");
@@ -245,7 +246,11 @@ void grep(flags_t *flags, char *pattern_str, char *filename, int *error) {
     line_n++;
     if (flags->l && !(exec)) break;
   }
-  if (flags->c) printf("%s:%d\n", filename, lines_with_matches);
+  if (flags->c && !flags->single_file) {
+    printf("%s:%d\n", filename, lines_with_matches);
+  } else if (flags->c) {
+    printf("%d\n", lines_with_matches);
+  }
   if (flags->l && lines_with_matches > 0) printf("%s\n", filename);
   free(line);
   free(temp);
