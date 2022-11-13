@@ -2,7 +2,7 @@ NAME=s21_grep
 
 CC=gcc
 DEBUG=-g -DDEBUG
-CFLAGS=-Wall -Werror -Wextra -std=c11
+CFLAGS=-Wall -Werror -Wextra -std=c11 -D_GNU_SOURCE -pedantic
 
 SRCS=s21_grep.c 
 OBJS=$(SRCS:.c=.o)
@@ -17,11 +17,18 @@ $(NAME): $(OBJS)
 %.o: %.c %.h 
 	$(CC) $(CFLAGS) -c $< -o $@
 
+test: $(NAME)
+	bash test_grep.sh
+
 clean:
 	rm -f $(OBJS)
 
 fclean:
 	make clean
-	rm -f $(NAME)
+	rm -rf $(NAME) $(NAME).dSYM
 
-.PHONY: all clean fclean
+re:
+	make fclean
+	make
+
+.PHONY: $(NAME) all test clean fclean re
